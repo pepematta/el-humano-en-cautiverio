@@ -3,29 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>El Humano en Cautiverio — Uso del Tiempo</title>
+<title>El Humano en Cautiverio — Diagnóstico Conductual</title>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #FAFAF7;
+    --bg: #FFFFFF;
     --text: #1a1a1a;
     --text-secondary: #5a5a5a;
     --text-tertiary: #8a8a8a;
     --border: #e0ddd6;
     --border-light: #eceae4;
     
-    /* Category colors — muted, natural palette */
-    --col-sleep: #2D4A7A;
-    --col-leisure: #4A8C6F;
-    --col-social: #D4A03C;
-    --col-movement: #C0694A;
-    --col-work: #8B6E99;
-    --col-personal: #7A8B99;
-    
-    /* Deficit/surplus */
-    --deficit: #C44D3F;
-    --surplus: #4A8C6F;
-    --neutral: #999;
+    /* Colores de énfasis */
+    --highlight: #C44D3F; /* Rojo para destacar */
+    --neutral-line: #d1cdc5; /* Gris para lo secundario */
     
     --serif: 'Source Serif 4', Georgia, serif;
     --sans: 'DM Sans', -apple-system, sans-serif;
@@ -61,7 +52,7 @@
     font-weight: 500;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--deficit);
+    color: var(--highlight);
     margin-bottom: 16px;
   }
 
@@ -72,7 +63,6 @@
     line-height: 1.15;
     color: var(--text);
     margin-bottom: 20px;
-    max-width: 720px;
   }
 
   .subtitle {
@@ -84,7 +74,7 @@
     max-width: 640px;
   }
 
-  /* ─── INTRO TEXT ─── */
+  /* ─── INTRO ─── */
   .intro {
     padding: 40px 0;
     border-bottom: 1px solid var(--border-light);
@@ -98,17 +88,8 @@
     margin-bottom: 12px;
   }
 
-  .intro p:last-child { margin-bottom: 0; }
-
-  .intro strong {
-    color: var(--text);
-    font-weight: 600;
-  }
-
   /* ─── CHART SECTION ─── */
-  .chart-section {
-    padding: 56px 0 40px;
-  }
+  .chart-section { padding: 56px 0 80px; }
 
   .chart-title {
     font-family: var(--serif);
@@ -124,292 +105,55 @@
     margin-bottom: 36px;
   }
 
-  /* ─── MAIN COMPARISON CHART ─── */
-  .comparison-chart {
+  /* ─── IMÁGENES Y CONTENEDOR DEL GRÁFICO ─── */
+  .chart-wrapper {
+    position: relative;
     width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding-bottom: 20px;
   }
 
-  .comparison-row {
-    display: grid;
-    grid-template-columns: 140px 1fr 60px 1fr 80px;
-    align-items: center;
-    gap: 0;
-    padding: 14px 0;
-    border-bottom: 1px solid var(--border-light);
-  }
-
-  .comparison-row.header-row {
-    border-bottom: 2px solid var(--border);
-    padding-bottom: 10px;
-  }
-
-  .comparison-row.header-row span {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--text-tertiary);
-  }
-
-  .row-label {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .row-label .dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  .bar-cell {
-    position: relative;
-    height: 28px;
-    display: flex;
-    align-items: center;
-  }
-
-  .bar-cell.left {
-    justify-content: flex-end;
-  }
-
-  .bar-cell.right {
-    justify-content: flex-start;
-  }
-
-  .bar {
-    height: 22px;
-    border-radius: 2px;
-    position: relative;
-    min-width: 2px;
-    transition: width 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  }
-
-  .bar .value-label {
-    position: absolute;
-    font-family: var(--mono);
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--text-secondary);
-    white-space: nowrap;
-    top: 50%;
-    transform: translateY(-50%);
-  }
-
-  .bar-cell.left .value-label {
-    right: calc(100% + 6px);
-  }
-
-  .bar-cell.right .value-label {
-    left: calc(100% + 6px);
-  }
-
-  .center-divider {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    color: var(--text-tertiary);
-  }
-
-  .center-divider .vs-line {
-    width: 1px;
-    height: 28px;
-    background: var(--border);
-  }
-
-  .delta-cell {
-    text-align: right;
-    font-family: var(--mono);
-    font-size: 12px;
-    font-weight: 500;
-    padding-left: 12px;
-  }
-
-  .delta-cell.deficit { color: var(--deficit); }
-  .delta-cell.surplus { color: var(--surplus); }
-  .delta-cell.neutral { color: var(--neutral); }
-
-  /* Header alignment */
-  .header-row .col-hg { text-align: right; padding-right: 4px; }
-  .header-row .col-mod { text-align: left; padding-left: 4px; }
-  .header-row .col-delta { text-align: right; }
-  .header-row .col-center { text-align: center; }
-
-  /* ─── DEFICIT SUMMARY ─── */
-  .deficit-summary {
-    padding: 48px 0;
-    border-top: 1px solid var(--border);
-  }
-
-  .deficit-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 24px;
-    margin-top: 32px;
-  }
-
-  .deficit-card {
-    background: white;
-    border: 1px solid var(--border-light);
-    border-radius: 8px;
-    padding: 24px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .deficit-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-  }
-
-  .deficit-card.card-deficit::before { background: var(--deficit); }
-  .deficit-card.card-surplus::before { background: var(--surplus); }
-
-  .deficit-card .card-category {
-    font-size: 12px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-tertiary);
-    margin-bottom: 8px;
-  }
-
-  .deficit-card .card-value {
-    font-family: var(--serif);
-    font-size: 36px;
-    font-weight: 700;
-    line-height: 1;
-    margin-bottom: 4px;
-  }
-
-  .deficit-card.card-deficit .card-value { color: var(--deficit); }
-  .deficit-card.card-surplus .card-value { color: var(--surplus); }
-
-  .deficit-card .card-unit {
-    font-size: 13px;
-    color: var(--text-secondary);
-  }
-
-  /* ─── STACKED BAR SECTION ─── */
-  .stacked-section {
-    padding: 48px 0;
-    border-top: 1px solid var(--border);
-  }
-
-  .stacked-comparison {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 48px;
-    margin-top: 32px;
-  }
-
-  .stacked-column h4 {
+  .slope-header {
     font-family: var(--sans);
     font-size: 13px;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-tertiary);
-    margin-bottom: 16px;
+    letter-spacing: 0.08em;
+    fill: var(--text-tertiary);
   }
 
-  .day-bar {
-    width: 100%;
-    height: 48px;
-    border-radius: 4px;
-    overflow: hidden;
-    display: flex;
-    margin-bottom: 20px;
-  }
-
-  .day-segment {
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--mono);
-    font-size: 10px;
+  .slope-label {
+    font-family: var(--sans);
+    font-size: 14px;
     font-weight: 500;
-    color: white;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-    transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    position: relative;
   }
 
-  .day-segment span {
-    opacity: 0.95;
-  }
-
-  .stacked-legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin-top: 12px;
-  }
-
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    color: var(--text-secondary);
-  }
-
-  .legend-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 2px;
-    flex-shrink: 0;
-  }
-
-  /* Breakdown list under each stacked bar */
-  .breakdown-list {
-    list-style: none;
-  }
-
-  .breakdown-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 6px 0;
-    border-bottom: 1px solid var(--border-light);
-    font-size: 13px;
-  }
-
-  .breakdown-item:last-child { border-bottom: none; }
-
-  .breakdown-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--text-secondary);
-  }
-
-  .breakdown-label .bdot {
-    width: 8px;
-    height: 8px;
-    border-radius: 2px;
-    flex-shrink: 0;
-  }
-
-  .breakdown-value {
+  .slope-label .mono {
     font-family: var(--mono);
     font-size: 12px;
-    font-weight: 500;
-    color: var(--text);
   }
 
-  /* ─── FOOTNOTES ─── */
+  .group-image {
+    position: absolute;
+    bottom: -30px;
+    width: 70px; 
+    height: 70px;
+    object-fit: contain; 
+    transform: translateX(-50%); 
+    z-index: 10;
+    
+    /* Mantenemos el truco para borrar el fondo blanco */
+    mix-blend-mode: multiply; 
+    
+    /* El navegador ahora usará su algoritmo de suavizado (anti-aliasing) por defecto */
+  }
+
+  /* Posiciones matemáticas exactas para alinearse con las columnas del SVG */
+  .img-hg { left: 17%; } 
+  .img-modern { left: 70%; }
+
+  /* ─── FOOTNOTES ORIGINALES ─── */
   .footnotes {
     padding: 40px 0 80px;
     border-top: 1px solid var(--border);
@@ -426,8 +170,8 @@
     font-size: 13px;
     line-height: 1.7;
     color: var(--text-tertiary);
-    margin-bottom: 8px;
-    max-width: 640px;
+    margin-bottom: 12px;
+    max-width: 720px;
   }
 
   .source-tag {
@@ -438,35 +182,10 @@
     padding: 2px 6px;
     border-radius: 3px;
     color: var(--text-secondary);
+    margin-right: 6px;
   }
 
-  /* ─── RESPONSIVE ─── */
-  @media (max-width: 720px) {
-    .comparison-row {
-      grid-template-columns: 110px 1fr 40px 1fr 64px;
-    }
-    .stacked-comparison {
-      grid-template-columns: 1fr;
-      gap: 36px;
-    }
-    .deficit-grid {
-      grid-template-columns: 1fr 1fr;
-    }
-    header { padding: 48px 0 36px; }
-    .row-label { font-size: 13px; }
-  }
-
-  @media (max-width: 480px) {
-    .comparison-row {
-      grid-template-columns: 90px 1fr 30px 1fr 50px;
-    }
-    .deficit-grid {
-      grid-template-columns: 1fr;
-    }
-    .row-label .dot { display: none; }
-  }
-
-  /* ─── ANIMATION ─── */
+  /* ─── ANIMATIONS ─── */
   .fade-in {
     opacity: 0;
     transform: translateY(12px);
@@ -481,79 +200,36 @@
   .delay-2 { animation-delay: 0.2s; }
   .delay-3 { animation-delay: 0.3s; }
   .delay-4 { animation-delay: 0.4s; }
-  .delay-5 { animation-delay: 0.5s; }
-  .delay-6 { animation-delay: 0.6s; }
 </style>
 </head>
 <body>
 
 <div class="container">
 
-  <!-- HEADER -->
   <header class="fade-in">
-    <div class="kicker">Visualización de información · 2026</div>
+    <div class="kicker">Análisis de Desviación Conductual</div>
     <h1>El humano en cautiverio</h1>
-    <p class="subtitle">Cómo el uso del tiempo en sociedades industrializadas se desvía del patrón conductual que caracterizó a nuestra especie durante cientos de miles de años.</p>
+    <p class="subtitle">Comparativa del uso del tiempo entre el patrón ancestral (Cazador-recolector) y el estándar de la vida moderna (OCDE).</p>
   </header>
 
-  <!-- INTRO -->
   <section class="intro fade-in delay-1">
     <p>En zoología, el <strong>enriquecimiento ambiental</strong> evalúa si un animal en cautiverio logra expresar sus conductas naturales: explorar, socializar, descansar, jugar. Cuando no las expresa, se habla de un <strong>déficit conductual</strong>.</p>
     <p>¿Qué pasa si aplicamos la misma lógica a nosotros? Los datos antropológicos de sociedades cazadoras-recolectoras —nuestro modo de vida durante el 95% de la historia humana— ofrecen una referencia de cómo distribuimos naturalmente nuestro tiempo. Los datos de la OCDE muestran cómo lo hacemos hoy.</p>
   </section>
 
-  <!-- MAIN COMPARISON CHART -->
   <section class="chart-section fade-in delay-2">
     <h2 class="chart-title">Minutos por día: lo natural vs. lo moderno</h2>
-    <p class="chart-subtitle">Distribución promedio del tiempo diario de un adulto (15–64 años)</p>
+    <p class="chart-subtitle">Diferencia entre el Humano prehistorico y el Humano moderno.</p>
 
-    <div class="comparison-chart">
-      <!-- Header -->
-      <div class="comparison-row header-row">
-        <span>Conducta</span>
-        <span class="col-hg">Cazador-recolector</span>
-        <span class="col-center"></span>
-        <span class="col-mod">OCDE promedio</span>
-        <span class="col-delta">Déficit</span>
+    <div class="chart-wrapper">
+      <div id="slope-chart"></div>
+      
+      <img src="Imagenes/Cazadores.png" class="group-image img-hg fade-in delay-3" alt="Cazador-recolector">
+      <img src="Imagenes/Modernos.png" class="group-image img-modern fade-in delay-3" alt="Humano Moderno">
       </div>
-
-      <!-- Rows will be generated by JS -->
-      <div id="chart-rows"></div>
-    </div>
   </section>
 
-  <!-- DEFICIT SUMMARY CARDS -->
-  <section class="deficit-summary fade-in delay-3">
-    <h2 class="chart-title">Diagnóstico: el déficit del cautiverio moderno</h2>
-    <p class="chart-subtitle">Diferencia diaria en minutos respecto al patrón cazador-recolector</p>
-    <div class="deficit-grid" id="deficit-cards"></div>
-  </section>
-
-  <!-- STACKED BAR: 24h COMPARISON -->
-  <section class="stacked-section fade-in delay-4">
-    <h2 class="chart-title">Un día de 24 horas: dos especies del mismo animal</h2>
-    <p class="chart-subtitle">Cómo se distribuyen las 1.440 minutos de un día</p>
-
-    <div class="stacked-comparison">
-      <!-- Hunter-gatherer -->
-      <div class="stacked-column">
-        <h4>Cazador-recolector</h4>
-        <div class="day-bar" id="bar-hg"></div>
-        <ul class="breakdown-list" id="breakdown-hg"></ul>
-      </div>
-      <!-- Modern -->
-      <div class="stacked-column">
-        <h4>OCDE Promedio</h4>
-        <div class="day-bar" id="bar-modern"></div>
-        <ul class="breakdown-list" id="breakdown-modern"></ul>
-      </div>
-    </div>
-
-    <div class="stacked-legend" id="stacked-legend"></div>
-  </section>
-
-  <!-- FOOTNOTES -->
-  <section class="footnotes fade-in delay-5">
+  <section class="footnotes fade-in delay-4">
     <h3>Fuentes y metodología</h3>
     <p><span class="source-tag">MODERNO</span> Promedios OCDE calculados a partir del OECD Time Use Database (30 países, población 15–64), complementados con datos de Our World in Data y la American Time Use Survey (BLS). Los valores representan promedios ponderados entre hombres y mujeres.</p>
     <p><span class="source-tag">CAZADOR-RECOLECTOR</span> Estimaciones basadas en estudios etnográficos cuantitativos: Lee (1968) sobre los !Kung San; Dyble et al. (2019) sobre los Agta de Filipinas; Yetish et al. (2015) sobre sueño en Hadza, San y Tsimane; Pontzer et al. (2012) sobre gasto energético Hadza; Sahlins (1972) y Marlowe (2010) sobre presupuestos de tiempo. Los valores son estimaciones centrales de múltiples fuentes.</p>
@@ -563,198 +239,123 @@
 </div>
 
 <script>
-// ─── DATA ───
-// All values in minutes per day
 const categories = [
-  {
-    label: 'Sueño',
-    hg: 420,       // ~7h — Yetish et al. 2015: 5.7–7.1h, central ~7h
-    modern: 492,   // ~8.2h — OECD personal care includes sleep avg
-    color: '#2D4A7A',
-    note: 'Calidad vs. cantidad'
-  },
-  {
-    label: 'Ocio y descanso',
-    hg: 300,       // ~5h — Lee, Sahlins, Dyble: abundant leisure
-    modern: 258,   // ~4.3h — OECD leisure average
-    color: '#4A8C6F',
-    note: ''
-  },
-  {
-    label: 'Socialización',
-    hg: 180,       // ~3h — continuous face-to-face in bands of 25-50
-    modern: 48,    // ~48min — ATUS: socializing & communicating
-    color: '#D4A03C',
-    note: ''
-  },
-  {
-    label: 'Movimiento activo',
-    hg: 210,       // ~3.5h — Pontzer: PAL 1.85, integrated in foraging
-    modern: 30,    // ~30min — WHO: most adults <30min deliberate exercise
-    color: '#C0694A',
-    note: ''
-  },
-  {
-    label: 'Trabajo productivo',
-    hg: 240,       // ~4h — Lee: 3-5h food acquisition; +1h tool/camp work
-    modern: 420,   // ~7h — OECD: paid work + unpaid work combined
-    color: '#8B6E99',
-    note: ''
-  },
-  {
-    label: 'Cuidado personal',
-    hg: 90,        // ~1.5h — eating, grooming, basic care
-    modern: 132,   // ~2.2h — OECD personal care minus sleep estimate
-    color: '#7A8B99',
-    note: ''
-  }
+  { label: 'Sueño', hg: 420, modern: 492, isHighlight: false },
+  { label: 'Trabajo productivo', hg: 240, modern: 420, isHighlight: true },
+  { label: 'Ocio y descanso', hg: 300, modern: 258, isHighlight: false },
+  { label: 'Cuidado personal', hg: 90, modern: 132, isHighlight: false },
+  { label: 'Socialización', hg: 180, modern: 48, isHighlight: true },
+  { label: 'Movimiento activo', hg: 210, modern: 30, isHighlight: true }
 ];
 
-const maxBarMinutes = 500; // scale reference
-
-// ─── RENDER COMPARISON CHART ───
-function renderChart() {
-  const container = document.getElementById('chart-rows');
+function renderSlopeChart() {
+  const container = document.getElementById('slope-chart');
+  const svgNS = "http://www.w3.org/2000/svg";
   
-  categories.forEach((cat, i) => {
-    const row = document.createElement('div');
-    row.className = `comparison-row fade-in`;
-    row.style.animationDelay = `${0.3 + i * 0.08}s`;
+  const svg = document.createElementNS(svgNS, "svg");
+  svg.setAttribute("viewBox", "0 0 800 520");
+  svg.style.width = "100%";
+  svg.style.height = "auto";
+  svg.style.overflow = "visible";
+
+  const maxVal = 500;
+  const pt = 40, pb = 20;
+  const innerH = 520 - pt - pb;
+  const leftX = 260;
+  const rightX = 540;
+
+  function getY(val) {
+    return pt + innerH - (val / maxVal) * innerH;
+  }
+
+  const createText = (text, x, y, anchor, className) => {
+    const el = document.createElementNS(svgNS, "text");
+    el.setAttribute("x", x);
+    el.setAttribute("y", y);
+    el.setAttribute("text-anchor", anchor);
+    el.setAttribute("class", className);
+    el.textContent = text;
+    return el;
+  };
+
+  svg.appendChild(createText("Cazador-recolector", leftX, pt - 15, "end", "slope-header"));
+  svg.appendChild(createText("OCDE Promedio", rightX, pt - 15, "start", "slope-header"));
+
+  // Dibujar primero las líneas grises y luego las rojas para que estas queden arriba
+  const sortedCategories = [...categories].sort((a, b) => (a.isHighlight === b.isHighlight) ? 0 : a.isHighlight ? 1 : -1);
+
+  sortedCategories.forEach((cat, i) => {
+    const y1 = getY(cat.hg);
+    const y2 = getY(cat.modern);
+    const animDelay = `${0.3 + i * 0.1}s`;
     
-    const hgPct = (cat.hg / maxBarMinutes) * 100;
-    const modPct = (cat.modern / maxBarMinutes) * 100;
+    const lineColor = cat.isHighlight ? 'var(--highlight)' : 'var(--neutral-line)';
+    const strokeWidth = cat.isHighlight ? '3.5' : '1.5';
+    const lineOpacity = cat.isHighlight ? '1' : '0.4';
+    const textColor = cat.isHighlight ? 'var(--highlight)' : 'var(--text-tertiary)';
+
+    // Línea
+    const line = document.createElementNS(svgNS, "line");
+    line.setAttribute("x1", leftX);
+    line.setAttribute("y1", y1);
+    line.setAttribute("x2", rightX);
+    line.setAttribute("y2", y2);
+    line.setAttribute("stroke", lineColor);
+    line.setAttribute("stroke-width", strokeWidth);
+    line.setAttribute("opacity", lineOpacity);
+    line.setAttribute("class", "fade-in");
+    line.style.animationDelay = animDelay;
+    svg.appendChild(line);
+
+    // Puntos
+    [ {x: leftX, y: y1}, {x: rightX, y: y2} ].forEach(point => {
+        const c = document.createElementNS(svgNS, "circle");
+        c.setAttribute("cx", point.x);
+        c.setAttribute("cy", point.y);
+        c.setAttribute("r", cat.isHighlight ? "4.5" : "3");
+        c.setAttribute("fill", lineColor);
+        c.setAttribute("class", "fade-in");
+        c.style.animationDelay = animDelay;
+        svg.appendChild(c);
+    });
+
+    // Etiqueta Izquierda
+    const t1 = document.createElementNS(svgNS, "text");
+    t1.setAttribute("x", leftX - 16);
+    t1.setAttribute("y", y1 + 5);
+    t1.setAttribute("text-anchor", "end");
+    t1.setAttribute("class", "slope-label fade-in");
+    t1.setAttribute("fill", textColor);
+    t1.style.animationDelay = animDelay;
+    t1.style.fontWeight = cat.isHighlight ? "600" : "400";
+    t1.innerHTML = `${cat.label} <tspan class="mono">${(cat.hg/60).toFixed(1)}h</tspan>`;
+    svg.appendChild(t1);
+
+    // Ajuste visual para que las etiquetas de la derecha no se solapen
+    let offset = 0;
+    if (cat.label === 'Movimiento activo') offset = 10;
+    if (cat.label === 'Socialización') offset = -2;
+
     const delta = cat.modern - cat.hg;
-    const deltaSign = delta > 0 ? '+' : '';
-    const deltaClass = delta > 20 ? 'surplus' : delta < -20 ? 'deficit' : 'neutral';
-    
-    // For the deficit column, flip logic:
-    // More work = surplus (bad in this framing), less leisure = deficit
-    let deficitClass;
-    if (cat.label === 'Trabajo productivo') {
-      deficitClass = delta > 0 ? 'deficit' : 'surplus'; // more work = deficit
-    } else if (cat.label === 'Sueño' || cat.label === 'Cuidado personal') {
-      deficitClass = 'neutral';
-    } else {
-      deficitClass = delta < 0 ? 'deficit' : 'surplus'; // less leisure/social = deficit
-    }
+    const deltaStr = delta > 0 ? `+${delta}m` : `${delta}m`;
 
-    const hgHours = (cat.hg / 60).toFixed(1);
-    const modHours = (cat.modern / 60).toFixed(1);
-
-    row.innerHTML = `
-      <div class="row-label">
-        <span class="dot" style="background:${cat.color}"></span>
-        ${cat.label}
-      </div>
-      <div class="bar-cell left">
-        <div class="bar" style="width:${hgPct}%; background:${cat.color}; opacity:0.75;">
-          <span class="value-label">${hgHours}h</span>
-        </div>
-      </div>
-      <div class="center-divider"><div class="vs-line"></div></div>
-      <div class="bar-cell right">
-        <div class="bar" style="width:${modPct}%; background:${cat.color}; opacity:0.45;">
-          <span class="value-label">${modHours}h</span>
-        </div>
-      </div>
-      <div class="delta-cell ${deficitClass}">
-        ${deltaSign}${delta} min
-      </div>
-    `;
-    
-    container.appendChild(row);
+    // Etiqueta Derecha
+    const t2 = document.createElementNS(svgNS, "text");
+    t2.setAttribute("x", rightX + 16);
+    t2.setAttribute("y", y2 + 5 + offset);
+    t2.setAttribute("text-anchor", "start");
+    t2.setAttribute("class", "slope-label fade-in");
+    t2.setAttribute("fill", textColor);
+    t2.style.animationDelay = animDelay;
+    t2.style.fontWeight = cat.isHighlight ? "600" : "400";
+    t2.innerHTML = `<tspan class="mono">${(cat.modern/60).toFixed(1)}h</tspan> (${deltaStr})`;
+    svg.appendChild(t2);
   });
+
+  container.appendChild(svg);
 }
 
-// ─── RENDER DEFICIT CARDS ───
-function renderDeficitCards() {
-  const container = document.getElementById('deficit-cards');
-  
-  const deficits = [
-    { category: 'Socialización', delta: -(180 - 48), unit: 'min/día menos de contacto social' },
-    { category: 'Movimiento', delta: -(210 - 30), unit: 'min/día menos de actividad física' },
-    { category: 'Trabajo', delta: +(420 - 240), unit: 'min/día más de trabajo productivo' },
-    { category: 'Ocio', delta: -(300 - 258), unit: 'min/día menos de ocio libre' },
-  ];
-
-  deficits.forEach((d, i) => {
-    const card = document.createElement('div');
-    const isDeficit = d.delta < 0 || d.category === 'Trabajo';
-    card.className = `deficit-card ${isDeficit ? 'card-deficit' : 'card-surplus'} fade-in`;
-    card.style.animationDelay = `${0.4 + i * 0.1}s`;
-    
-    const displayValue = d.category === 'Trabajo' ? `+${d.delta}` : `${d.delta}`;
-    
-    card.innerHTML = `
-      <div class="card-category">${d.category}</div>
-      <div class="card-value">${displayValue}</div>
-      <div class="card-unit">${d.unit}</div>
-    `;
-    container.appendChild(card);
-  });
-}
-
-// ─── RENDER STACKED BARS ───
-function renderStackedBars() {
-  const total = 1440; // minutes in a day
-  
-  const hgBar = document.getElementById('bar-hg');
-  const modBar = document.getElementById('bar-modern');
-  const hgBreakdown = document.getElementById('breakdown-hg');
-  const modBreakdown = document.getElementById('breakdown-modern');
-  const legend = document.getElementById('stacked-legend');
-  
-  categories.forEach(cat => {
-    // HG segment
-    const hgSeg = document.createElement('div');
-    hgSeg.className = 'day-segment';
-    hgSeg.style.width = `${(cat.hg / total) * 100}%`;
-    hgSeg.style.background = cat.color;
-    if (cat.hg / total > 0.08) {
-      hgSeg.innerHTML = `<span>${Math.round(cat.hg / 60)}h</span>`;
-    }
-    hgBar.appendChild(hgSeg);
-    
-    // Modern segment
-    const modSeg = document.createElement('div');
-    modSeg.className = 'day-segment';
-    modSeg.style.width = `${(cat.modern / total) * 100}%`;
-    modSeg.style.background = cat.color;
-    modSeg.style.opacity = '0.65';
-    if (cat.modern / total > 0.06) {
-      modSeg.innerHTML = `<span>${(cat.modern / 60).toFixed(1)}h</span>`;
-    }
-    modBar.appendChild(modSeg);
-    
-    // Breakdowns
-    const hgItem = document.createElement('li');
-    hgItem.className = 'breakdown-item';
-    hgItem.innerHTML = `
-      <span class="breakdown-label"><span class="bdot" style="background:${cat.color}"></span>${cat.label}</span>
-      <span class="breakdown-value">${(cat.hg / 60).toFixed(1)}h (${Math.round(cat.hg / total * 100)}%)</span>
-    `;
-    hgBreakdown.appendChild(hgItem);
-    
-    const modItem = document.createElement('li');
-    modItem.className = 'breakdown-item';
-    modItem.innerHTML = `
-      <span class="breakdown-label"><span class="bdot" style="background:${cat.color}; opacity:0.65"></span>${cat.label}</span>
-      <span class="breakdown-value">${(cat.modern / 60).toFixed(1)}h (${Math.round(cat.modern / total * 100)}%)</span>
-    `;
-    modBreakdown.appendChild(modItem);
-    
-    // Legend
-    const legendItem = document.createElement('div');
-    legendItem.className = 'legend-item';
-    legendItem.innerHTML = `<span class="legend-dot" style="background:${cat.color}"></span>${cat.label}`;
-    legend.appendChild(legendItem);
-  });
-}
-
-// ─── INIT ───
-renderChart();
-renderDeficitCards();
-renderStackedBars();
+renderSlopeChart();
 </script>
 
 </body>
