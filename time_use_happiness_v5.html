@@ -1,0 +1,366 @@
+
+<h2 class="sr-only">Explorador interactivo de uso del tiempo y bienestar — evaluación de vida y esperanza de vida saludable</h2>
+<style>
+.w{padding:1.5rem 0}
+.wtitle{font-size:18px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px}
+.wsub{font-size:13px;color:var(--color-text-secondary);margin-bottom:1.25rem;line-height:1.5}
+.srow{display:grid;grid-template-columns:150px 1fr 46px 44px;align-items:center;gap:8px;margin-bottom:3px}
+.slabel{font-size:13px;color:var(--color-text-secondary);display:flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.shrs{font-size:13px;font-weight:500;color:var(--color-text-primary);text-align:right}
+.spct{font-size:12px;color:var(--color-text-secondary);text-align:right}
+.rng{display:grid;grid-template-columns:150px 1fr;gap:8px;margin-bottom:10px}
+.rngvals{display:flex;justify-content:space-between;font-size:10px;color:var(--color-text-tertiary);padding:0 2px}
+.cards2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:1.25rem}
+.card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:.875rem}
+.clabel{font-size:11px;color:var(--color-text-secondary);margin-bottom:6px}
+.cval{font-size:28px;font-weight:500;line-height:1;margin-bottom:6px}
+.csub{font-size:11px;color:var(--color-text-tertiary);margin-bottom:6px}
+.cbar{height:3px;border-radius:2px;background:var(--color-border-tertiary);overflow:hidden}
+.cfill{height:100%;border-radius:2px;transition:width .35s ease}
+.nearest{display:flex;align-items:center;gap:10px;padding:.75rem 1rem;background:var(--color-background-secondary);border-radius:var(--border-radius-md);margin-bottom:1.25rem;border:0.5px solid var(--color-border-tertiary)}
+.nname{font-size:14px;font-weight:500;color:var(--color-text-primary)}
+.ndesc{font-size:12px;color:var(--color-text-secondary);margin-top:2px}
+.ndist{font-size:11px;color:var(--color-text-tertiary);margin-left:auto;white-space:nowrap}
+.chartwrap{margin-bottom:1rem}
+.ctitle{font-size:12px;color:var(--color-text-secondary);margin-bottom:6px}
+.scatout{position:relative;height:260px}
+.footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:.5rem}
+.legend{display:flex;flex-wrap:wrap;gap:10px}
+.legitem{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary)}
+.legdot{width:8px;height:8px;border-radius:50%}
+.wbtn{font-size:12px;padding:5px 12px;cursor:pointer;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-secondary)}
+.wbtn:hover{background:var(--color-background-secondary)}
+.soundrow{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem}
+.wnote{font-size:11px;color:var(--color-text-tertiary);margin-top:1rem;line-height:1.6}
+</style>
+
+<div class="w">
+  <p class="wtitle">¿Cómo pasas el día?</p>
+  <p class="wsub">Ajusta los sliders o haz clic en un país. Límites = rango real OCDE. Outputs del World Happiness Report 2025.</p>
+
+  <div class="soundrow">
+    <button class="wbtn" id="btnSound"><i class="ti ti-volume-off" aria-hidden="true"></i> Sonificación: apagada</button>
+    <span style="font-size:12px;color:var(--color-text-tertiary)">Tonos codifican los dos indicadores de bienestar</span>
+  </div>
+
+  <div id="sliders"></div>
+  <div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;font-size:12px;color:var(--color-text-secondary);margin-top:2px;margin-bottom:1.25rem">
+    Total: <span id="totalHrs" style="font-weight:500">24.0 h</span>
+  </div>
+
+  <div class="cards2" id="cards"></div>
+
+  <div class="nearest" id="nearestBox">
+    <span id="nFlag" style="font-size:22px;line-height:1">—</span>
+    <div style="min-width:0">
+      <div class="nname" id="nName">—</div>
+      <div class="ndesc" id="nDesc">País más cercano a tu configuración</div>
+    </div>
+    <span class="ndist" id="nDist"></span>
+  </div>
+
+  <div class="chartwrap">
+    <p class="ctitle">Haz clic en un punto para cargar ese país · eje X = trabajo remunerado · eje Y = evaluación de vida (0–10) · diamante amarillo = tu configuración</p>
+    <div class="scatout"><canvas id="sc" role="img" aria-label="Scatter plot países OCDE: horas de trabajo remunerado vs evaluación de vida.">Scatter plot interactivo.</canvas></div>
+  </div>
+
+  <div class="footer">
+    <div class="legend" id="legend"></div>
+    <button class="wbtn" id="btnReset">Promedio OCDE</button>
+  </div>
+  <p class="wnote">Fuentes: OECD Time Use Database (datos más recientes por país, 2019–2024) · World Happiness Report 2025 (Gallup, promedios 2022–2024). La expectativa de vida saludable es la contribución al índice WHR (escala 0–1.1). Regresión lineal múltiple, n=28. Correlación observacional.</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const CATS=[
+  {key:'paid',    label:'Trabajo remunerado', color:'#7F77DD'},
+  {key:'unpaid',  label:'Trabajo doméstico',  color:'#1D9E75'},
+  {key:'personal',label:'Cuidado personal',   color:'#378ADD'},
+  {key:'leisure', label:'Ocio',               color:'#D85A30'},
+  {key:'other',   label:'Otros',              color:'#888780'},
+];
+const TM=1440;
+
+const FLAGS={Australia:'🇦🇺',Austria:'🇦🇹',Belgium:'🇧🇪',Canada:'🇨🇦',Denmark:'🇩🇰',Estonia:'🇪🇪',Finland:'🇫🇮',France:'🇫🇷',Germany:'🇩🇪',Greece:'🇬🇷',Hungary:'🇭🇺',Ireland:'🇮🇪',Italy:'🇮🇹',Japan:'🇯🇵',Latvia:'🇱🇻',Lithuania:'🇱🇹',Luxembourg:'🇱🇺',Mexico:'🇲🇽',Netherlands:'🇳🇱','New Zealand':'🇳🇿',Norway:'🇳🇴',Poland:'🇵🇱',Portugal:'🇵🇹',Slovenia:'🇸🇮',Spain:'🇪🇸',Sweden:'🇸🇪',Turkey:'🇹🇷','United Kingdom':'🇬🇧','United States':'🇺🇸'};
+
+const COUNTRIES=[
+  {name:'Australia',   paid:238.2,unpaid:243.2,personal:657.5,leisure:281.2,other:20.0, lifeEval:6.916,healthyLife:0.956},
+  {name:'Austria',     paid:265.6,unpaid:188.0,personal:667.7,leisure:306.9,other:11.9, lifeEval:6.845,healthyLife:0.926},
+  {name:'Belgium',     paid:235.8,unpaid:191.8,personal:664.0,leisure:339.4,other:9.2,  lifeEval:6.926,healthyLife:0.988},
+  {name:'Canada',      paid:337.0,unpaid:205.3,personal:656.0,leisure:211.3,other:30.5, lifeEval:6.741,healthyLife:0.955},
+  {name:'Denmark',     paid:224.8,unpaid:216.6,personal:659.4,leisure:328.8,other:10.4, lifeEval:7.539,healthyLife:0.930},
+  {name:'Estonia',     paid:293.1,unpaid:173.7,personal:653.8,leisure:301.2,other:18.3, lifeEval:6.410,healthyLife:0.692},
+  {name:'Finland',     paid:240.1,unpaid:185.5,personal:644.7,leisure:329.8,other:39.8, lifeEval:7.764,healthyLife:0.939},
+  {name:'France',      paid:204.2,unpaid:181.1,personal:752.2,leisure:293.5,other:8.9,  lifeEval:6.586,healthyLife:0.950},
+  {name:'Germany',     paid:244.0,unpaid:192.4,personal:657.6,leisure:340.9,other:5.1,  lifeEval:6.882,healthyLife:0.876},
+  {name:'Greece',      paid:227.7,unpaid:180.2,personal:684.6,leisure:341.4,other:6.1,  lifeEval:5.697,healthyLife:0.799},
+  {name:'Hungary',     paid:237.6,unpaid:229.2,personal:683.1,leisure:281.3,other:8.7,  lifeEval:5.937,healthyLife:0.633},
+  {name:'Ireland',     paid:268.0,unpaid:209.6,personal:608.9,leisure:312.3,other:41.2, lifeEval:6.928,healthyLife:0.936},
+  {name:'Italy',       paid:176.7,unpaid:219.0,personal:707.8,leisure:323.3,other:13.2, lifeEval:6.574,healthyLife:0.975},
+  {name:'Japan',       paid:368.0,unpaid:125.0,personal:640.0,leisure:269.0,other:37.0, lifeEval:6.130,healthyLife:1.041},
+  {name:'Latvia',      paid:329.9,unpaid:196.1,personal:641.3,leisure:268.8,other:3.8,  lifeEval:6.365,healthyLife:0.512},
+  {name:'Lithuania',   paid:315.2,unpaid:224.5,personal:645.5,leisure:246.6,other:8.2,  lifeEval:6.704,healthyLife:0.653},
+  {name:'Luxembourg',  paid:284.7,unpaid:179.2,personal:685.7,leisure:276.4,other:14.1, lifeEval:7.063,healthyLife:0.981},
+  {name:'Mexico',      paid:349.2,unpaid:263.9,personal:633.6,leisure:171.9,other:21.4, lifeEval:6.972,healthyLife:0.631},
+  {name:'Netherlands', paid:242.8,unpaid:185.6,personal:681.6,leisure:314.8,other:15.3, lifeEval:7.223,healthyLife:0.922},
+  {name:'New Zealand', paid:270.0,unpaid:204.0,personal:648.0,leisure:301.0,other:17.0, lifeEval:6.995,healthyLife:0.924},
+  {name:'Norway',      paid:275.4,unpaid:185.6,personal:613.3,leisure:354.0,other:11.7, lifeEval:7.242,healthyLife:0.983},
+  {name:'Poland',      paid:214.0,unpaid:248.0,personal:682.0,leisure:261.0,other:35.0, lifeEval:6.768,healthyLife:0.693},
+  {name:'Portugal',    paid:295.0,unpaid:222.5,personal:675.7,leisure:240.7,other:6.0,  lifeEval:6.029,healthyLife:0.944},
+  {name:'Slovenia',    paid:264.6,unpaid:230.7,personal:628.1,leisure:310.6,other:6.0,  lifeEval:6.868,healthyLife:0.913},
+  {name:'Spain',       paid:202.0,unpaid:216.7,personal:691.8,leisure:316.0,other:13.4, lifeEval:6.540,healthyLife:1.036},
+  {name:'Sweden',      paid:293.4,unpaid:196.5,personal:622.5,leisure:321.5,other:6.1,  lifeEval:7.255,healthyLife:1.027},
+  {name:'United Kingdom',paid:262.3,unpaid:194.5,personal:645.2,leisure:305.5,other:32.5,lifeEval:6.694,healthyLife:0.888},
+  {name:'United States', paid:278.2,unpaid:197.1,personal:664.0,leisure:279.9,other:20.8,lifeEval:6.816,healthyLife:0.678},
+];
+
+const RANGES={};
+CATS.forEach(cat=>{
+  const vals=COUNTRIES.map(c=>c[cat.key]);
+  const mn=Math.min(...vals),mx=Math.max(...vals);
+  RANGES[cat.key]={min:mn===mx?Math.max(0,mn-5):mn, max:mn===mx?mx+5:mx};
+});
+
+const RCOLS={'Nordic':'#1D9E75','Anglosajón':'#378ADD','Europa central':'#7F77DD','Europa del sur':'#D85A30','Asia-Pacífico':'#D4A03C','América Latina':'#3B6D11','Europa del este':'#888780'};
+const REGIONS={Denmark:'Nordic',Finland:'Nordic',Norway:'Nordic',Sweden:'Nordic',Australia:'Anglosajón',Canada:'Anglosajón',Ireland:'Anglosajón','New Zealand':'Anglosajón','United Kingdom':'Anglosajón','United States':'Anglosajón',Austria:'Europa central',Belgium:'Europa central',France:'Europa central',Germany:'Europa central',Netherlands:'Europa central',Luxembourg:'Europa central',Italy:'Europa del sur',Portugal:'Europa del sur',Spain:'Europa del sur',Greece:'Europa del sur',Japan:'Asia-Pacífico',Mexico:'América Latina',Turkey:'América Latina',Estonia:'Europa del este',Hungary:'Europa del este',Latvia:'Europa del este',Lithuania:'Europa del este',Poland:'Europa del este',Slovenia:'Europa del este'};
+
+const OAVG={};
+CATS.forEach(c=>{OAVG[c.key]=COUNTRIES.reduce((s,co)=>s+co[c.key],0)/COUNTRIES.length;});
+
+let mins={};
+CATS.forEach(c=>{mins[c.key]=OAVG[c.key];});
+
+let soundOn=false,audioCtx=null,chart=null;
+
+function buildReg(){
+  const keys=CATS.map(c=>c.key);
+  function reg(yKey){
+    const n=COUNTRIES.length;
+    const mx=keys.map(k=>COUNTRIES.reduce((s,c)=>s+c[k]/60,0)/n);
+    const my=COUNTRIES.reduce((s,c)=>s+c[yKey],0)/n;
+    const slope=keys.map((k,i)=>{
+      let sxy=0,sxx=0;
+      COUNTRIES.forEach(c=>{const dx=c[k]/60-mx[i],dy=c[yKey]-my;sxy+=dx*dy;sxx+=dx*dx;});
+      return sxx>0?sxy/sxx:0;
+    });
+    return{mx,my,slope};
+  }
+  return{lifeEval:reg('lifeEval'),healthyLife:reg('healthyLife')};
+}
+const REG=buildReg();
+
+const LE_MIN=COUNTRIES.reduce((s,c)=>Math.min(s,c.lifeEval),9);
+const LE_MAX=COUNTRIES.reduce((s,c)=>Math.max(s,c.lifeEval),0);
+const HL_MIN=COUNTRIES.reduce((s,c)=>Math.min(s,c.healthyLife),9);
+const HL_MAX=COUNTRIES.reduce((s,c)=>Math.max(s,c.healthyLife),0);
+
+function predict(m){
+  const keys=CATS.map(c=>c.key);
+  function pred(r){let y=r.my;keys.forEach((k,i)=>{y+=r.slope[i]*(m[k]/60-r.mx[i]);});return y;}
+  return{
+    lifeEval:  Math.max(LE_MIN,Math.min(LE_MAX,pred(REG.lifeEval))),
+    healthyLife:Math.max(HL_MIN,Math.min(HL_MAX,pred(REG.healthyLife))),
+  };
+}
+
+function findNearest(m){
+  const keys=CATS.map(c=>c.key);
+  const rng=keys.map(k=>RANGES[k].max-RANGES[k].min||1);
+  let best=null,bestD=Infinity;
+  COUNTRIES.forEach(c=>{
+    const d=Math.sqrt(keys.reduce((s,k,i)=>s+Math.pow((m[k]-c[k])/rng[i],2),0));
+    if(d<bestD){bestD=d;best={country:c,dist:d};}
+  });
+  return best;
+}
+
+function playTone(freq,type,dur,vol){
+  if(!soundOn)return;
+  if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+  o.connect(g);g.connect(audioCtx.destination);
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(0,audioCtx.currentTime);
+  g.gain.linearRampToValueAtTime(vol,audioCtx.currentTime+0.02);
+  g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+dur);
+  o.start();o.stop(audioCtx.currentTime+dur+0.05);
+}
+function sonify(v){
+  if(!soundOn)return;
+  const leNorm=(v.lifeEval-LE_MIN)/(LE_MAX-LE_MIN);
+  const hlNorm=(v.healthyLife-HL_MIN)/(HL_MAX-HL_MIN);
+  setTimeout(()=>playTone(220+leNorm*440,'sine',0.4,0.1),0);
+  setTimeout(()=>playTone(180+hlNorm*360,'triangle',0.35,0.07),160);
+}
+
+function clamp(key,val){return Math.max(RANGES[key].min,Math.min(RANGES[key].max,val));}
+
+function updateSliders(){
+  CATS.forEach(c=>{
+    const el=document.getElementById('sl_'+c.key);
+    if(el)el.value=mins[c.key];
+    const h=document.getElementById('hrs_'+c.key);
+    if(h)h.textContent=(mins[c.key]/60).toFixed(1)+'h';
+    const p=document.getElementById('pct_'+c.key);
+    if(p)p.textContent=Math.round(mins[c.key]/TM*100)+'%';
+  });
+  document.getElementById('totalHrs').textContent=(CATS.reduce((s,c)=>s+mins[c.key],0)/60).toFixed(1)+' h';
+}
+
+function updateCards(){
+  const v=predict(mins);
+  const leNorm=(v.lifeEval-LE_MIN)/(LE_MAX-LE_MIN);
+  const hlNorm=(v.healthyLife-HL_MIN)/(HL_MAX-HL_MIN);
+  const data=[
+    {label:'Evaluación de vida', sub:'Escala Cantril 0–10',      val:v.lifeEval.toFixed(2),   color:'#7F77DD', fill:leNorm},
+    {label:'Expectativa de vida saludable', sub:'Contribución WHR (0–1.1)', val:v.healthyLife.toFixed(3), color:'#1D9E75', fill:hlNorm},
+  ];
+  const cont=document.getElementById('cards');
+  cont.innerHTML='';
+  data.forEach(d=>{
+    const el=document.createElement('div');
+    el.className='card';
+    el.innerHTML=`<div class="clabel">${d.label}</div><div class="cval" style="color:${d.color}">${d.val}</div><div class="csub">${d.sub}</div><div class="cbar"><div class="cfill" style="width:${Math.min(100,Math.max(0,d.fill*100)).toFixed(1)}%;background:${d.color}"></div></div>`;
+    cont.appendChild(el);
+  });
+}
+
+function updateNearest(){
+  const res=findNearest(mins);
+  if(!res)return;
+  const c=res.country;
+  document.getElementById('nFlag').textContent=FLAGS[c.name]||'🌍';
+  document.getElementById('nName').textContent=c.name;
+  const sim=Math.max(0,Math.round((1-res.dist/2)*100));
+  document.getElementById('nDist').textContent='similitud '+sim+'%';
+  const diffs=CATS.map(cat=>({label:cat.label,d:mins[cat.key]-c[cat.key]}))
+    .filter(x=>Math.abs(x.d)>8)
+    .sort((a,b)=>Math.abs(b.d)-Math.abs(a.d)).slice(0,2);
+  let desc='País más parecido a tu distribución de tiempo';
+  if(diffs.length){
+    desc='Diferencias: '+diffs.map(x=>`${Math.abs(Math.round(x.d))} min ${x.d>0?'más':'menos'} de ${x.label.toLowerCase()}`).join(' · ');
+  }
+  document.getElementById('nDesc').textContent=desc;
+  if(chart){
+    const youIdx=chart.data.datasets.length-1;
+    const v=predict(mins);
+    chart.data.datasets[youIdx].data=[{x:mins.paid/60,y:v.lifeEval,name:'Tú'}];
+    chart.data.datasets.forEach((ds,i)=>{
+      if(i===youIdx)return;
+      const isNearest=ds.label===c.name;
+      ds.pointRadius=isNearest?11:6;
+      ds.pointBorderWidth=isNearest?2.5:1;
+      ds.borderColor=isNearest?'#1a1a1a':ds._baseColor;
+    });
+    chart.update('none');
+  }
+}
+
+function onSliderChange(catKey,newVal){
+  newVal=clamp(catKey,Math.round(newVal));
+  const diff=newVal-mins[catKey];
+  if(diff!==0){
+    const movable=CATS.map(c=>c.key).filter(k=>{
+      if(k===catKey)return false;
+      if(diff>0)return mins[k]>RANGES[k].min;
+      return mins[k]<RANGES[k].max;
+    });
+    const tot=movable.reduce((s,k)=>s+mins[k],0);
+    if(tot>0){
+      movable.forEach(k=>{
+        mins[k]=clamp(k,Math.round(mins[k]-diff*(mins[k]/tot)));
+      });
+      const adj=TM-CATS.reduce((s,c)=>s+mins[c.key],0)-diff;
+      if(adj!==0&&movable.length>0){
+        const big=movable.reduce((a,b)=>mins[a]>mins[b]?a:b);
+        mins[big]=clamp(big,mins[big]+adj);
+      }
+    }
+  }
+  mins[catKey]=newVal;
+  updateSliders();updateCards();updateNearest();sonify(predict(mins));
+}
+
+function buildSliders(){
+  const cont=document.getElementById('sliders');
+  cont.innerHTML='';
+  CATS.forEach(cat=>{
+    const r=RANGES[cat.key];
+    const row=document.createElement('div');
+    row.className='srow';
+    row.innerHTML=`
+      <div class="slabel"><span class="dot" style="background:${cat.color}"></span>${cat.label}</div>
+      <input type="range" min="${r.min}" max="${r.max}" step="1" value="${Math.round(mins[cat.key])}" id="sl_${cat.key}" aria-label="${cat.label}">
+      <span class="shrs" id="hrs_${cat.key}">${(mins[cat.key]/60).toFixed(1)}h</span>
+      <span class="spct" id="pct_${cat.key}">${Math.round(mins[cat.key]/TM*100)}%</span>`;
+    cont.appendChild(row);
+    const hint=document.createElement('div');
+    hint.className='rng';
+    hint.innerHTML=`<span></span><div class="rngvals"><span>${(r.min/60).toFixed(1)}h</span><span>${(r.max/60).toFixed(1)}h</span></div>`;
+    cont.appendChild(hint);
+    row.querySelector('input').addEventListener('input',e=>{onSliderChange(cat.key,parseFloat(e.target.value));});
+  });
+}
+
+function buildChart(){
+  const ctx=document.getElementById('sc');
+  const datasets=COUNTRIES.map(c=>{
+    const region=REGIONS[c.name]||'Europa central';
+    const col=RCOLS[region]||'#888780';
+    return{label:c.name,data:[{x:c.paid/60,y:c.lifeEval,name:c.name}],backgroundColor:col+'CC',borderColor:col,_baseColor:col,borderWidth:1,pointRadius:6,pointHoverRadius:9,type:'scatter'};
+  });
+  const v=predict(mins);
+  datasets.push({label:'Tú',data:[{x:mins.paid/60,y:v.lifeEval,name:'Tú'}],backgroundColor:'#F0C040',borderColor:'#B88800',_baseColor:'#F0C040',borderWidth:2,pointRadius:10,pointStyle:'rectRot',pointHoverRadius:13,type:'scatter'});
+  chart=new Chart(ctx,{
+    type:'scatter',
+    data:{datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      onClick:(evt)=>{
+        const pts=chart.getElementsAtEventForMode(evt,'nearest',{intersect:true},false);
+        if(pts.length&&pts[0].datasetIndex<COUNTRIES.length){
+          const c=COUNTRIES[pts[0].datasetIndex];
+          CATS.forEach(cat=>{mins[cat.key]=c[cat.key];});
+          updateSliders();updateCards();updateNearest();sonify(predict(mins));
+        }
+      },
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const d=ctx.raw;return`${d.name}: ${d.x.toFixed(1)}h trabajo · vida ${d.y.toFixed(2)}`;},}}},
+      scales:{
+        x:{title:{display:true,text:'Horas de trabajo remunerado / día',color:'#888',font:{size:11}},min:2.5,max:6.5,ticks:{color:'#888',font:{size:11}},grid:{color:'rgba(128,128,128,0.12)'}},
+        y:{title:{display:true,text:'Evaluación de vida (0–10)',color:'#888',font:{size:11}},min:5.5,max:8.0,ticks:{color:'#888',font:{size:11}},grid:{color:'rgba(128,128,128,0.12)'}},
+      },
+    },
+  });
+  Chart.register({id:'ctryLabels',afterDatasetsDraw(chart){
+    const{ctx,scales:{x,y}}=chart;
+    ctx.save();ctx.font='10px sans-serif';ctx.textAlign='center';
+    COUNTRIES.forEach((c,i)=>{
+      const pt=chart.data.datasets[i].data[0];
+      ctx.fillStyle='rgba(80,80,80,0.65)';
+      ctx.fillText(c.name,x.getPixelForValue(pt.x),y.getPixelForValue(pt.y)-11);
+    });
+    ctx.restore();
+  }});
+}
+
+function buildLegend(){
+  const cont=document.getElementById('legend');
+  Object.entries(RCOLS).forEach(([r,c])=>{const el=document.createElement('div');el.className='legitem';el.innerHTML=`<span class="legdot" style="background:${c}"></span>${r}`;cont.appendChild(el);});
+  const you=document.createElement('div');you.className='legitem';you.innerHTML=`<span class="legdot" style="background:#F0C040;border:1.5px solid #B88800"></span>Tu configuración`;cont.appendChild(you);
+}
+
+document.getElementById('btnSound').addEventListener('click',()=>{
+  soundOn=!soundOn;
+  if(soundOn&&!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  document.getElementById('btnSound').innerHTML=soundOn?'<i class="ti ti-volume" aria-hidden="true"></i> Sonificación: encendida':'<i class="ti ti-volume-off" aria-hidden="true"></i> Sonificación: apagada';
+  if(soundOn)sonify(predict(mins));
+});
+document.getElementById('btnReset').addEventListener('click',()=>{
+  CATS.forEach(c=>{mins[c.key]=OAVG[c.key];});
+  updateSliders();updateCards();updateNearest();
+});
+
+buildSliders();updateCards();buildChart();buildLegend();updateNearest();
+</script>
