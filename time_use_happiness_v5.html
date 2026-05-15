@@ -24,6 +24,10 @@
 .cbar{height:3px;border-radius:2px;background:var(--color-border-tertiary);overflow:hidden}
 .cfill{height:100%;border-radius:2px;transition:width .35s ease}
 .nearest{display:flex;align-items:center;gap:10px;padding:.75rem 1rem;background:var(--color-background-secondary);border-radius:var(--border-radius-md);margin-bottom:1.25rem;border:0.5px solid var(--color-border-tertiary)}
+.nearest-clickable{cursor:pointer;transition:background .15s,border-color .15s}
+.nearest-clickable:hover{background:var(--color-background-tertiary,#f0f0f0);border-color:var(--color-border-primary)}
+.nearest-clickable:hover .nname{text-decoration:underline}
+.nearest-click-hint{font-size:11px;color:var(--color-text-tertiary);margin-top:2px}
 .nname{font-size:14px;font-weight:500;color:var(--color-text-primary)}
 .ndesc{font-size:12px;color:var(--color-text-secondary);margin-top:2px}
 .ndist{font-size:11px;color:var(--color-text-tertiary);margin-left:auto;white-space:nowrap}
@@ -38,7 +42,7 @@
 .wbtn:hover{background:var(--color-background-secondary)}
 .soundrow{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem}
 .sound-hint{font-size:12px;color:var(--color-text-tertiary);line-height:1.5}
-.interval-label{font-size:11px;font-family:monospace;padding:2px 7px;border-radius:3px;background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary);white-space:nowrap}
+.interval-label{font-size:12px;font-family:monospace;font-weight:600;padding:4px 10px;border-radius:4px;background:var(--color-background-secondary);color:var(--color-text-primary);border:1px solid var(--color-border-primary);white-space:nowrap;min-width:80px;text-align:center;transition:background .2s,color .2s}.interval-label.active{background:#F0C040;color:#333;border-color:#B88800}
 .wnote{font-size:11px;color:var(--color-text-tertiary);margin-top:1rem;line-height:1.6}
 </style>
 
@@ -53,17 +57,21 @@
   </div>
 
   <div id="sliders"></div>
-  <div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;font-size:12px;color:var(--color-text-secondary);margin-top:2px;margin-bottom:1.25rem">
+  <div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;font-size:12px;color:var(--color-text-secondary);margin-top:2px;margin-bottom:.5rem">
     Total: <span id="totalHrs" style="font-weight:500">24.0 h</span>
   </div>
+  <p style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:1.25rem;line-height:1.6">
+    <strong style="color:var(--color-text-secondary)">🔓 Candado:</strong> fija esa actividad en el promedio OCDE mientras ajustas las demás. Al cargar un país se desbloquean todos los valores.
+  </p>
 
   <div class="cards2" id="cards"></div>
 
-  <div class="nearest" id="nearestBox">
+  <div class="nearest nearest-clickable" id="nearestBox" title="Cargar este país" role="button" tabindex="0">
     <span id="nFlag" style="font-size:22px;line-height:1">—</span>
     <div style="min-width:0">
       <div class="nname" id="nName">—</div>
       <div class="ndesc" id="nDesc">País más cercano a tu configuración</div>
+      <div class="nearest-click-hint" id="nHint"></div>
     </div>
     <span class="ndist" id="nDist"></span>
   </div>
@@ -200,11 +208,11 @@ function startSound(norm){
   oscInt.frequency.setTargetAtTime(TONIC*iv.ratio,audioCtx.currentTime,0.06);
   gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
   gainNode.gain.setTargetAtTime(0.10,audioCtx.currentTime,0.04);
-  document.getElementById('intervalLabel').textContent=iv.name;
+  const lbl=document.getElementById('intervalLabel');lbl.textContent=iv.name;lbl.classList.add('active');
   clearTimeout(fadeTimer);fadeTimer=setTimeout(()=>fadeOut(),1200);
 }
 function fadeOut(){if(!audioCtx)return;gainNode.gain.cancelScheduledValues(audioCtx.currentTime);gainNode.gain.setTargetAtTime(0,audioCtx.currentTime,0.18);}
-function stopSound(){if(!audioCtx)return;clearTimeout(fadeTimer);fadeOut();}
+function stopSound(){if(!audioCtx)return;clearTimeout(fadeTimer);fadeOut();document.getElementById('intervalLabel').classList.remove('active');}
 
 let chart=null;
 
@@ -300,6 +308,16 @@ function updateNearest(v){
   let desc='País más parecido a tu distribución de tiempo';
   if(diffs.length)desc='Diferencias: '+diffs.map(x=>`${Math.abs(Math.round(x.d))} min ${x.d>0?'más':'menos'} de ${x.label.toLowerCase()}`).join(' · ');
   document.getElementById('nDesc').textContent=desc;
+  const hint=document.getElementById('nHint');
+  if(hint)hint.textContent='Haz clic para cargar '+c.name;
+  // attach click to banner
+  const box=document.getElementById('nearestBox');
+  box._nearestCountry=c;
+  if(!box._listenerAdded){
+    box.addEventListener('click',()=>{if(box._nearestCountry)loadCountry(box._nearestCountry);});
+    box.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&box._nearestCountry){e.preventDefault();loadCountry(box._nearestCountry);}});
+    box._listenerAdded=true;
+  }
   if(chart){
     const youIdx=chart.data.datasets.length-1;
     chart.data.datasets[youIdx].data=[{x:v.lifeEval,y:v.lifeExp,name:'Tú'}];
@@ -385,7 +403,7 @@ function buildLegend(){
 document.getElementById('btnSound').addEventListener('click',()=>{
   soundOn=!soundOn;
   if(soundOn){initAudio();document.getElementById('btnSound').textContent='⏹ Desactivar sonificación';const v=idwPredict(mins);startSound(wellbeingNorm(v));setTimeout(()=>fadeOut(),1200);}
-  else{document.getElementById('btnSound').textContent='▶ Activar sonificación';stopSound();document.getElementById('intervalLabel').textContent='—';}
+  else{document.getElementById('btnSound').textContent='▶ Activar sonificación';stopSound();const lbl=document.getElementById('intervalLabel');lbl.textContent='—';lbl.classList.remove('active');}
 });
 
 document.getElementById('btnReset').addEventListener('click',()=>{
